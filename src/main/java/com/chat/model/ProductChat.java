@@ -46,6 +46,9 @@ public class ProductChat implements Serializable {
 	@Column(name = "status")
 	private int status;
 
+	@Column(name = "banned")
+	private boolean banned;
+
 	public String getChatId() {
 		return chatId;
 	}
@@ -108,6 +111,14 @@ public class ProductChat implements Serializable {
 
 	public void setStatus(int status) {
 		this.status = status;
+	}
+
+	public boolean isBanned() {
+		return banned;
+	}
+
+	public void setBanned(boolean banned) {
+		this.banned = banned;
 	}
 
 }

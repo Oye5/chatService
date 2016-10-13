@@ -17,4 +17,6 @@ public interface ProductChatDao {
 	List<ProductChat> getChatIdByProductId(String productId);
 
 	List<ProductChat> getChatIdByBuyerId(String userId);
+
+	int bannedUser(String bannedby, String bannedto);
 }

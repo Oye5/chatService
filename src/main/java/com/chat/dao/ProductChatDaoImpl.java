@@ -57,4 +57,11 @@ public class ProductChatDaoImpl extends AbstractDao<String, ProductChat> impleme
 		return (List<ProductChat>) criteria.list();
 	}
 
+	@Override
+	public int bannedUser(String bannedby, String bannedto) {
+		String hqlUpdate = "update ProductChat a set a.banned = :banned where a.seller = :seller and a.buyer=:buyer or a.buyer=:seller and a.seller=:buyer";
+		return getSession().createQuery(hqlUpdate).setBoolean("banned", true).setString("seller", bannedby).setString("buyer", bannedto).executeUpdate();
+   
+	}
+
 }

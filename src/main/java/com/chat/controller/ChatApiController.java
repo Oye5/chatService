@@ -275,6 +275,38 @@ public class ChatApiController {
 
 	}
 
+	/**
+	 * banned api for banding one user to other
+	 * 
+	 * @param bannedby
+	 * @param bannedto
+	 * @return
+	 */
+	@RequestMapping(value = "/v1/banneduser/bannedby/{bannedby}/bannedto/{bannedto}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<?> bannedUser(@PathVariable("bannedby") String bannedby, @PathVariable("bannedto") String bannedto) {
+		GenericResponse response = new GenericResponse();
+		try {
+			System.out.println("==banned by==" + bannedto);
+			int result = chatService.bannedUser(bannedby, bannedto);
+			System.out.println("================" + result);
+			if (result == 1) {
+				response.setCode("S001");
+				response.setMessage("user banned");
+				return new ResponseEntity<GenericResponse>(response, HttpStatus.OK);
+			} else {
+				response.setCode("V001");
+				response.setMessage("please check user id's");
+				return new ResponseEntity<GenericResponse>(response, HttpStatus.EXPECTATION_FAILED);
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.setCode("E001");
+			response.setMessage(e.getMessage());
+			return new ResponseEntity<GenericResponse>(response, HttpStatus.BAD_REQUEST);
+		}
+	}
+
 	//
 	// get all conversation by userid buying
 	@RequestMapping(value = "/v1/conversations/users/{userId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
