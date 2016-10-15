@@ -101,6 +101,18 @@ public class ChatApiController {
 			}
 			ProductChat productChat = chatService.getChatId(productId, userFrom, userTo);
 
+			// /////////////////////////
+			// check banned users /////
+			// ///////////////////////
+
+			if (productChat != null) {
+				if (productChat.isBanned()) {
+					response.setCode("B001");
+					response.setMessage("Can't message user banned");
+					return new ResponseEntity<GenericResponse>(response, HttpStatus.EXPECTATION_FAILED);
+				}
+			}
+
 			if (productChat == null) {
 				productChat = new ProductChat();
 				productChat.setChatId(UUID.randomUUID().toString());
@@ -307,8 +319,14 @@ public class ChatApiController {
 		}
 	}
 
-	//
-	// get all conversation by userid buying
+	/**
+	 * get all conversations of user by userId
+	 * 
+	 * @param userId
+	 * @param offset
+	 * @param numResults
+	 * @return
+	 */
 	@RequestMapping(value = "/v1/conversations/users/{userId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<?> getConversationsByUserId(@PathVariable("userId") String userId, @RequestParam("offset") Integer offset, @RequestParam("num_results") Integer numResults) {
 		GenericResponse response = new GenericResponse();
@@ -316,20 +334,147 @@ public class ChatApiController {
 			System.out.println("==convId=" + userId);
 			// List<ProductChat> chat = chatService.getChatIdByBuyerId(userId);
 			List<ProductConversations> conv = conversationService.getConversationsByUserId(userId);
+			// sort message by date
+			Collections.sort(conv, new Comparator<ProductConversations>() {
+				@Override
+				public int compare(final ProductConversations object1, final ProductConversations object2) {
+					return object1.getDate().compareTo(object2.getDate());
+				}
+			});
 			System.out.println("-=-=0--=" + conv);
 			MessageResponse messageResponse = null;
 			List<MessageResponse> listMessageResponses = new ArrayList<MessageResponse>();
-			for (int i = 0; i < conv.size(); i++) {
-				messageResponse = new MessageResponse();
-				messageResponse.setCreated_at(conv.get(i).getDate());
-				messageResponse.setId(conv.get(i).getId());
-				messageResponse.setImageUrl(conv.get(i).getImageUrl());
-				messageResponse.setIs_read(conv.get(i).getIsRead());
-				// messageResponse.setStatus(conv.get(i).get);
-				messageResponse.setText(conv.get(i).getMessage());
-				messageResponse.setType(conv.get(i).getType());
-				messageResponse.setUser_id(conv.get(i).getReceiverId().getUserId());
-				listMessageResponses.add(messageResponse);
+			if (offset < conv.size()) {
+				for (int i = 0; i < conv.size() && i < numResults; i++) {
+					messageResponse = new MessageResponse();
+					messageResponse.setCreated_at(conv.get(i).getDate());
+					messageResponse.setId(conv.get(i).getId());
+					messageResponse.setImageUrl(conv.get(i).getImageUrl());
+					messageResponse.setIs_read(conv.get(i).getIsRead());
+					// messageResponse.setStatus(conv.get(i).get);
+					messageResponse.setText(conv.get(i).getMessage());
+					messageResponse.setType(conv.get(i).getType());
+					messageResponse.setUser_id(conv.get(i).getReceiverId().getUserId());
+					listMessageResponses.add(messageResponse);
+				}
+			}
+			return new ResponseEntity<List<MessageResponse>>(listMessageResponses, HttpStatus.OK);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.setCode("E001");
+			response.setMessage(e.getMessage());
+			return new ResponseEntity<GenericResponse>(response, HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	/**
+	 * get conversations by buyer id
+	 * 
+	 * @param userId
+	 * @param offset
+	 * @param numResults
+	 * @return
+	 */
+	@RequestMapping(value = "/v1/conversations/buying/{userId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<?> getConversationsByBuyerId(@PathVariable("userId") String userId, @RequestParam("offset") Integer offset, @RequestParam("num_results") Integer numResults) {
+		GenericResponse response = new GenericResponse();
+		try {
+			System.out.println("==convId=" + userId);
+			List<ProductChat> chat = chatService.getChatIdByBuyerId(userId);
+			if (chat.size() == 0) {
+				response.setCode("V001");
+				response.setMessage("No chats Yet");
+				return new ResponseEntity<GenericResponse>(response, HttpStatus.EXPECTATION_FAILED);
+			}
+			List<String> chatId = new ArrayList<String>();
+			for (ProductChat productChatId : chat) {
+				chatId.add(productChatId.getChatId());
+			}
+			List<ProductConversations> conv = conversationService.getConversationsByChatId(chatId);
+			// sort message by date
+			Collections.sort(conv, new Comparator<ProductConversations>() {
+				@Override
+				public int compare(final ProductConversations object1, final ProductConversations object2) {
+					return object1.getDate().compareTo(object2.getDate());
+				}
+			});
+			System.out.println("-=-=0--=" + conv);
+			MessageResponse messageResponse = null;
+			List<MessageResponse> listMessageResponses = new ArrayList<MessageResponse>();
+			if (offset < conv.size()) {
+				for (int i = 0; i < conv.size() && i < numResults; i++) {
+					messageResponse = new MessageResponse();
+					messageResponse.setCreated_at(conv.get(i).getDate());
+					messageResponse.setId(conv.get(i).getId());
+					messageResponse.setImageUrl(conv.get(i).getImageUrl());
+					messageResponse.setIs_read(conv.get(i).getIsRead());
+					// messageResponse.setStatus(conv.get(i).get);
+					messageResponse.setText(conv.get(i).getMessage());
+					messageResponse.setType(conv.get(i).getType());
+					messageResponse.setUser_id(conv.get(i).getReceiverId().getUserId());
+					listMessageResponses.add(messageResponse);
+				}
+			}
+			return new ResponseEntity<List<MessageResponse>>(listMessageResponses, HttpStatus.OK);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.setCode("E001");
+			response.setMessage(e.getMessage());
+			return new ResponseEntity<GenericResponse>(response, HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	/**
+	 * get conversations by seller id
+	 * 
+	 * @param userId
+	 * @param offset
+	 * @param numResults
+	 * @return
+	 */
+
+	@RequestMapping(value = "/v1/conversations/selling/{userId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<?> getConversationsBySellerId(@PathVariable("userId") String userId, @RequestParam("offset") Integer offset, @RequestParam("num_results") Integer numResults) {
+		GenericResponse response = new GenericResponse();
+		try {
+			System.out.println("==convId=" + userId);
+			List<ProductChat> chat = chatService.getChatIdBySellerId(userId);
+			if (chat.size() == 0) {
+				response.setCode("V001");
+				response.setMessage("No chats Yet");
+				return new ResponseEntity<GenericResponse>(response, HttpStatus.EXPECTATION_FAILED);
+			}
+			List<String> chatId = new ArrayList<String>();
+			for (ProductChat productChatId : chat) {
+				chatId.add(productChatId.getChatId());
+			}
+			List<ProductConversations> conv = conversationService.getConversationsByChatId(chatId);
+			// sort the conversation message
+			Collections.sort(conv, new Comparator<ProductConversations>() {
+				@Override
+				public int compare(final ProductConversations object1, final ProductConversations object2) {
+					return object1.getDate().compareTo(object2.getDate());
+				}
+			});
+
+			System.out.println("-=-=0--=" + conv);
+			MessageResponse messageResponse = null;
+			List<MessageResponse> listMessageResponses = new ArrayList<MessageResponse>();
+			if (offset < conv.size()) {
+				for (int i = 0; i < conv.size() && i < numResults; i++) {
+					messageResponse = new MessageResponse();
+					messageResponse.setCreated_at(conv.get(i).getDate());
+					messageResponse.setId(conv.get(i).getId());
+					messageResponse.setImageUrl(conv.get(i).getImageUrl());
+					messageResponse.setIs_read(conv.get(i).getIsRead());
+					// messageResponse.setStatus(conv.get(i).get);
+					messageResponse.setText(conv.get(i).getMessage());
+					messageResponse.setType(conv.get(i).getType());
+					messageResponse.setUser_id(conv.get(i).getReceiverId().getUserId());
+					listMessageResponses.add(messageResponse);
+				}
 			}
 			return new ResponseEntity<List<MessageResponse>>(listMessageResponses, HttpStatus.OK);
 

@@ -51,9 +51,16 @@ public class ProductConversationsDaoImpl extends AbstractDao<String, ProductConv
 
 	@Override
 	public List<ProductConversations> getConversationsByUserId(String userId) {
-		// orrrr
 		Criteria criteria = createEntityCriteria();
 		criteria.add(Restrictions.or(Restrictions.eq("receiverId.userId", userId), Restrictions.eq("senderId.userId", userId)));
+		return (List<ProductConversations>) criteria.list();
+	}
+
+	@Override
+	public List<ProductConversations> getConversationsByChatId(List<String> chatId) {
+		System.out.println("==chatid===" + chatId);
+		Criteria criteria = createEntityCriteria();
+		criteria.add(Restrictions.in("chatId.chatId", chatId)).list();
 		return (List<ProductConversations>) criteria.list();
 	}
 

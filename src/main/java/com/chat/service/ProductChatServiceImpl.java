@@ -51,7 +51,12 @@ public class ProductChatServiceImpl implements ProductChatService {
 	@Override
 	public int bannedUser(String bannedby, String bannedto) {
 		return chatDao.bannedUser(bannedby, bannedto);
-		
+
+	}
+
+	@Override
+	public List<ProductChat> getChatIdBySellerId(String userId) {
+		return chatDao.getChatIdBySellerId(userId);
 	}
 
 }

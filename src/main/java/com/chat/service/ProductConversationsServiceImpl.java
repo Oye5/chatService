@@ -38,4 +38,9 @@ public class ProductConversationsServiceImpl implements ProductConversationsServ
 		return convDao.getConversationsByUserId(userId);
 	}
 
+	@Override
+	public List<ProductConversations> getConversationsByChatId(List<String> chatId) {
+		return convDao.getConversationsByChatId(chatId);
+	}
+
 }

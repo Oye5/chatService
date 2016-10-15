@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.chat.model.ProductChat;
 
-
 public interface ProductChatService {
 
 	ProductChat saveChatMessages(ProductChat productChat);
@@ -18,6 +17,8 @@ public interface ProductChatService {
 	List<ProductChat> getChatIdByProductId(String productId);
 
 	List<ProductChat> getChatIdByBuyerId(String userId);
-	
+
 	int bannedUser(String bannedby, String bannedto);
+
+	List<ProductChat> getChatIdBySellerId(String userId);
 }
